@@ -1,3 +1,5 @@
+const Feed = require('feed');
+
 const youtube = require('../../youtube.js');
 
 module.exports = {
@@ -13,6 +15,7 @@ async function handle(req, res) {
 	const {playlistId, format} = req.params;
 
 	const allPlaylistItems = [];
+	let playlistInfo;
 
 	let nextPageToken;
 
@@ -25,9 +28,15 @@ async function handle(req, res) {
 		return;
 	}
 
-	// TODO validate playlistId
-
 	try {
+		const playlistRes = await youtube.playlists.list({
+			part: 'id,snippet',
+			id: playlistId,
+		});
+		playlistInfo = playlistRes.data.items[0];
+		if (!playlistInfo) {
+			throw new Error('Playlist not found');
+		}
 		let requestCount = 1; // XXX
 		do {
 			console.log(`request ${requestCount++}`); // XXX
@@ -59,6 +68,20 @@ async function handle(req, res) {
 		return 0;
 	});
 
+	const feed = new Feed({
+		title: playlistInfo.snippet.title,
+		link: `https://www.youtube.com/playlist?list=${playlistInfo.id}`,
+		description: playlistInfo.snippet.description,
+		updated: allPlaylistItems.length > 0 ? new Date(allPlaylistItems[0].snippet.publishedAt) : new Date(playlistInfo.snippet.publishedAt),
+	});
+
+	allPlaylistItems.forEach(e => feed.addItem({
+		title: e.snippet.title,
+		link: `https://www.youtube.com/watch?v=${e.snippet.resourceId.videoId}`,
+		description: e.snippet.description,
+		date: new Date(e.snippet.publishedAt),
+	}));
+
 	switch (format) {
 		case SUPPORTED_FORMATS.FORMAT_JSON:
 			res.send({
@@ -69,10 +92,7 @@ async function handle(req, res) {
 			});
 			break;
 		case SUPPORTED_FORMATS.FORMAT_RSS:
-			res.status(500).send({
-				success: false,
-				error: 'Not implemented yet',
-			});
+			res.set('Content-Type', 'application/rss+xml').send(feed.rss2());
 			break;
 	}
 }
