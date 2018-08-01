@@ -22,7 +22,6 @@ async function handle(req, res) {
 	// validate format
 	if (!Object.values(SUPPORTED_FORMATS).includes(format)) {
 		res.status(400).send({
-			success: false,
 			error: `Unsupported format. Supported formats are: ${Object.values(SUPPORTED_FORMATS).map(e => `'${e}'`).join(', ')}`,
 		});
 		return;
@@ -51,7 +50,6 @@ async function handle(req, res) {
 		} while (nextPageToken);
 	} catch (err) {
 		res.status(500).send({
-			success: false,
 			error: err.message,
 		});
 		return;
@@ -84,12 +82,7 @@ async function handle(req, res) {
 
 	switch (format) {
 		case SUPPORTED_FORMATS.FORMAT_JSON:
-			res.send({
-				success: true,
-				playlistId,
-				format,
-				allPlaylistItems,
-			});
+			res.set('Content-Type', 'application/json').send(feed.json1());
 			break;
 		case SUPPORTED_FORMATS.FORMAT_RSS:
 			res.set('Content-Type', 'application/rss+xml').send(feed.rss2());
