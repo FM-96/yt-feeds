@@ -4,6 +4,11 @@ module.exports = {
 	handle,
 };
 
+const SUPPORTED_FORMATS = {
+	FORMAT_JSON: 'json',
+	FORMAT_RSS: 'rss',
+};
+
 async function handle(req, res) {
 	const {playlistId, format} = req.params;
 
@@ -11,7 +16,16 @@ async function handle(req, res) {
 
 	let nextPageToken;
 
-	// TODO validate playlistId and format
+	// validate format
+	if (!Object.values(SUPPORTED_FORMATS).includes(format)) {
+		res.status(400).send({
+			success: false,
+			error: `Unsupported format. Supported formats are: ${Object.values(SUPPORTED_FORMATS).map(e => `'${e}'`).join(', ')}`,
+		});
+		return;
+	}
+
+	// TODO validate playlistId
 
 	try {
 		let requestCount = 1; // XXX
@@ -34,10 +48,20 @@ async function handle(req, res) {
 		return;
 	}
 
-	res.send({
-		success: true,
-		playlistId,
-		format,
-		allPlaylistItems,
-	});
+	switch (format) {
+		case SUPPORTED_FORMATS.FORMAT_JSON:
+			res.send({
+				success: true,
+				playlistId,
+				format,
+				allPlaylistItems,
+			});
+			break;
+		case SUPPORTED_FORMATS.FORMAT_RSS:
+			res.status(500).send({
+				success: false,
+				error: 'Not implemented yet',
+			});
+			break;
+	}
 }
