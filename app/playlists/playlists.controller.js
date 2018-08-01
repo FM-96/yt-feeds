@@ -48,6 +48,17 @@ async function handle(req, res) {
 		return;
 	}
 
+	// sort playlist items (newest in playlist first)
+	allPlaylistItems.sort((a, b) => {
+		if (a.snippet.publishedAt > b.snippet.publishedAt) {
+			return -1;
+		}
+		if (a.snippet.publishedAt < b.snippet.publishedAt) {
+			return 1;
+		}
+		return 0;
+	});
+
 	switch (format) {
 		case SUPPORTED_FORMATS.FORMAT_JSON:
 			res.send({
