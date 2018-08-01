@@ -17,8 +17,6 @@ async function handle(req, res) {
 	const allPlaylistItems = [];
 	let playlistInfo;
 
-	let nextPageToken;
-
 	// validate format
 	if (!Object.values(SUPPORTED_FORMATS).includes(format)) {
 		res.status(400).send({
@@ -27,6 +25,8 @@ async function handle(req, res) {
 		return;
 	}
 
+	// get data from YouTube
+	let nextPageToken;
 	try {
 		const playlistRes = await youtube.playlists.list({
 			part: 'id,snippet',
@@ -36,9 +36,7 @@ async function handle(req, res) {
 		if (!playlistInfo) {
 			throw new Error('Playlist not found');
 		}
-		let requestCount = 1; // XXX
 		do {
-			console.log(`request ${requestCount++}`); // XXX
 			const ytRes = await youtube.playlistItems.list({
 				part: 'id,snippet',
 				playlistId,
@@ -55,7 +53,7 @@ async function handle(req, res) {
 		return;
 	}
 
-	// sort playlist items (newest in playlist first)
+	// sort playlist items (most recently added to playlist first)
 	allPlaylistItems.sort((a, b) => {
 		if (a.snippet.publishedAt > b.snippet.publishedAt) {
 			return -1;
@@ -86,6 +84,11 @@ async function handle(req, res) {
 			break;
 		case SUPPORTED_FORMATS.FORMAT_RSS:
 			res.set('Content-Type', 'application/rss+xml').send(feed.rss2());
+			break;
+		default:
+			res.status(500).send({
+				error: 'Something went wrong (this should never happen)',
+			});
 			break;
 	}
 }

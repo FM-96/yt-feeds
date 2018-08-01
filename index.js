@@ -6,6 +6,8 @@ const routes = require('./app/routes.js');
 
 const app = express();
 
+// TODO add logging
+
 app.use(routes);
 app.use(function (req, res) {
 	res.sendStatus(404);
