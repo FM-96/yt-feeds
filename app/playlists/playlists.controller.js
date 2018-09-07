@@ -14,7 +14,7 @@ const SUPPORTED_FORMATS = {
 async function handle(req, res) {
 	const {playlistId, format} = req.params;
 
-	const allPlaylistItems = [];
+	let allPlaylistItems = [];
 	let playlistInfo;
 
 	// validate format
@@ -52,6 +52,8 @@ async function handle(req, res) {
 		});
 		return;
 	}
+
+	allPlaylistItems = allPlaylistItems.filter(e => !(e.snippet.title === 'Private video' && e.snippet.description === 'This video is private.'));
 
 	// sort playlist items (most recently added to playlist first)
 	allPlaylistItems.sort((a, b) => {
