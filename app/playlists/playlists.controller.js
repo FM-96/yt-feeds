@@ -53,7 +53,9 @@ async function handle(req, res) {
 		return;
 	}
 
-	allPlaylistItems = allPlaylistItems.filter(e => !(e.snippet.title === 'Private video' && e.snippet.description === 'This video is private.'));
+	if (req.query.show_unavailable === undefined) {
+		allPlaylistItems = allPlaylistItems.filter(e => !(e.snippet.title === 'Private video' && e.snippet.description === 'This video is private.'));
+	}
 
 	// sort playlist items (most recently added to playlist first)
 	allPlaylistItems.sort((a, b) => {
